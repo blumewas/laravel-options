@@ -79,7 +79,7 @@ trait HasOptions
 
     protected function throwIfOptionNotSet(string $name): bool
     {
-        if (property_exits($this, 'throwIfOptionNotSet')) {
+        if (property_exists($this, 'throwIfOptionNotSet')) {
             return $this->throwIfOptionsNotSet;
         }
 

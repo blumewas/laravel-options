@@ -20,7 +20,14 @@ class HasOptions extends HasOneOrMany
     /**
      * The options group.
      */
-    protected string $optionsGroup;
+    protected ?string $optionsGroup = null;
+
+    /**
+     * The options class.
+     *
+     * @var class-string<BaseOptions>
+     */
+    protected string $optionClass;
 
     /**
      * Create a new morph one or many relationship instance.
@@ -40,7 +47,7 @@ class HasOptions extends HasOneOrMany
         $localKey,
         string $optionClass,
     ) {
-        $this->optionsGroup = $this->getOptionsGroup($parent, $optionClass);
+        $this->optionsGroup = $this->getOptionsGroup($parent);
 
         parent::__construct($query, $parent, $foreignKey, $localKey);
     }
@@ -62,8 +69,12 @@ class HasOptions extends HasOneOrMany
     /** {@inheritDoc} */
     public function addEagerConstraints(array $models)
     {
-        // TODO fix
-        $this->getRelationQuery()->where('group', $this->optionsGroup);
+        $this->whereInEager(
+            'whereIn',
+            'group',
+            $this->getOptionGroups($models),
+            $this->getRelationQuery()
+        );
     }
 
     /**
@@ -117,17 +128,30 @@ class HasOptions extends HasOneOrMany
         return $this->matchMany($models, $results, $relation);
     }
 
+    protected function getOptionGroups(array $models): array
+    {
+        return array_map(function (Model $model) {
+            return $this->getOptionsGroup($model);
+        }, $models);
+    }
+
     /**
      * Get the options group.
      *
      * @param  TDeclaringModel  $parent
      * @param  class-string<BaseOptions>  $optionClass
      */
-    protected function getOptionsGroup(Model $parent, string $optionClass): string
+    protected function getOptionsGroup(Model $parent): ?string
     {
-        $parentKeyValue = $parent->getAttribute($parent->getKeyName());
-        $groupName = $optionClass::group();
 
-        return "{$groupName}-{$parentKeyValue}";
+        // if ($optionClass === null) {
+        //     $optionClass = $parent->getOptionsClass();
+        // }
+
+        // if ($optionClass === null || ! is_a($optionClass, BaseOptions::class, true)) {
+        //     throw new \InvalidArgumentException('Option class not set.');
+        // }
+
+        return $parent->getOptionKey();
     }
 }

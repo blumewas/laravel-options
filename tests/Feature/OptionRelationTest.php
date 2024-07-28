@@ -1,18 +1,17 @@
 <?php
 
-use blumewas\LaravelOptions\Models\Option;
 use Workbench\App\Models\TestOptionRelationsHolder;
 
-// it('can create an option relation', function () {
-//     $holder = TestOptionRelationsHolder::create();
+it('can create an option relation', function () {
+    $holder = TestOptionRelationsHolder::create();
 
-//     $holder->relatedOptions()->create([
-//         'name' => 'strOption',
-//         'payload' => 'strValue',
-//     ]);
+    $holder->relatedOptions()->create([
+        'name' => 'strOption',
+        'payload' => 'strValue',
+    ]);
 
-//     expect($holder->relatedOptions()->count())->toBe(1);
-// });
+    expect($holder->relatedOptions()->count())->toBe(1);
+});
 
 it('can load an option relation', function () {
     $holder = TestOptionRelationsHolder::create();

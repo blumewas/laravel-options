@@ -17,15 +17,11 @@ trait HasRelatedOptions
 
     public static function bootHasRelatedOptions()
     {
-        static::addGlobalScope('options', function (Builder $builder) {
-            $builder->with('relatedOptions');
-        });
-
         static::retrieved(function (Model $model) {
-            // TODO fix eager loading
-            // if (! $model->relationLoaded('relatedOptions') || ! $model->relatedOptions->isEmpty()) {
-            //     return;
-            // }
+            // skip if the related options are empty
+            if ($model->relatedOptions->isEmpty()) {
+                return;
+            }
 
             foreach ($model->relatedOptions as $option) {
                 $model->_options->set($option->name, $option->payload);
@@ -109,7 +105,7 @@ trait HasRelatedOptions
 
     protected function throwIfOptionNotSet(string $name): bool
     {
-        if (property_exits($this, 'throwIfOptionNotSet')) {
+        if (property_exists($this, 'throwIfOptionNotSet')) {
             return $this->throwIfOptionsNotSet;
         }
 
@@ -155,10 +151,14 @@ trait HasRelatedOptions
     /**
      * Get the options group key to retrieve related option models.
      */
-    public function getOptionKey(): string
+    public function getOptionKey(): ?string
     {
-        $group = $this->getOptionsClass()::group();
         $keyValue = $this->getAttribute($this->getKeyName());
+        if (! $keyValue) {
+            return null;
+        }
+
+        $group = $this->getOptionsClass()::group();
 
         return "{$group}-{$keyValue}";
     }
