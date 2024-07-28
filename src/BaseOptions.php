@@ -18,10 +18,12 @@ abstract class BaseOptions implements Arrayable, Jsonable
 
     private array $optional = [];
 
-    public function __construct(
+    final public function __construct(
     ) {
         $rc = new \ReflectionClass($this);
         $properties = $rc->getProperties(\ReflectionProperty::IS_PUBLIC);
+
+        $defaults = $this->defaultOptions();
 
         foreach ($properties as $prop) {
             $type = $prop->getType();
@@ -35,6 +37,10 @@ abstract class BaseOptions implements Arrayable, Jsonable
 
             $this->options[$name] = $type->getName();
             $this->optional[$name] = $type->allowsNull();
+
+            if (! empty($defaults) && ! isset($this->{$name}) && isset($defaults[$name])) {
+                $this->{$name} = $defaults[$name];
+            }
         }
     }
 
@@ -66,10 +72,10 @@ abstract class BaseOptions implements Arrayable, Jsonable
             throw new \InvalidArgumentException("Option '$name' is not a public property of ".static::class);
         }
 
+        // This also handles default values
         if (isset($this->{$name})) {
             return $this->{$name};
         }
-        // TODO handle default values?
 
         if ($this->optional[$name]) {
             return null;
@@ -85,7 +91,6 @@ abstract class BaseOptions implements Arrayable, Jsonable
      */
     public function save(): Collection
     {
-        // TODO handle default values?
         return collect($this->options)
             ->map(function (string $type, string $name) {
                 return Option::updateOrCreate([
@@ -100,20 +105,32 @@ abstract class BaseOptions implements Arrayable, Jsonable
     /**
      * Load the options from the database.
      */
-    public function load(): static
+    public static function load(): static
     {
         $optionModels = Option::where('group', static::group())->get();
 
+        // If there are no options in the database, return the instance as is
         if ($optionModels->isEmpty()) {
-            // TODO load the default options?
-            return $this;
+            return self::default();
         }
 
-        $optionModels->each(function (Option $option) {
-            $this->set($option->name, $option->payload);
+        // Create a new instance of the options class and set the values from the database
+        $instance = new static;
+        $optionModels->each(function (Option $option) use ($instance) {
+            $instance->set($option->name, $option->payload);
         });
 
-        return $this;
+        return $instance;
+    }
+
+    /**
+     * Get the default option values.
+     *
+     * @return array<string, mixed>
+     */
+    public function defaultOptions(): array
+    {
+        return [];
     }
 
     /**
@@ -123,17 +140,28 @@ abstract class BaseOptions implements Arrayable, Jsonable
      */
     public static function make($value): static
     {
+        // Make an instance of the options class from the given value.
+        $makerMethod = static::getMaker($value);
+        if ($makerMethod) {
+            return call_user_func([static::class, $makerMethod], $value);
+        }
+
         $optService = app(OptionsService::class);
 
         $instance = $optService->makeVia($value, static::class);
-
-        // TODO implement own via methods
-        // TODO return a default instance if the value is null
         if (! $instance instanceof static) {
             throw new \InvalidArgumentException('Could not make an instance of '.static::class.' from the given value');
         }
 
         return $instance;
+    }
+
+    /**
+     * Create a default instance of the options class.
+     */
+    public static function default(): static
+    {
+        return new static;
     }
 
     /**
@@ -159,5 +187,62 @@ abstract class BaseOptions implements Arrayable, Jsonable
     public function toJson($options = 0)
     {
         return json_encode($this->toArray(), $options);
+    }
+
+    /**
+     * Get the maker method for the given value.
+     *
+     * @param  mixed  $value
+     */
+    protected static function getMaker($value): ?string
+    {
+        $makerMethods = static::getMakerMethods();
+
+        $valueType = gettype($value);
+        $valueClass = is_object($value) ? get_class($value) : null;
+
+        return collect($makerMethods)
+            ->first(function (string $methodName, string $typeClass) use ($valueType, $valueClass) {
+                return $valueClass ? $typeClass === $valueClass : $typeClass === $valueType;
+            });
+    }
+
+    /**
+     * Get the maker methods for the options class.
+     * This are all static methods that start with 'via' and have one parameter.
+     *
+     * @return array<string, string>
+     */
+    protected static function getMakerMethods(): array
+    {
+        $class = new \ReflectionClass(static::class);
+        $staticMethods = $class->getMethods(\ReflectionMethod::IS_STATIC);
+
+        $makerMethods = [];
+        foreach ($staticMethods as $method) {
+            if (! $method->isPublic() || ! $method->isStatic()) {
+                continue;
+            }
+
+            $methodName = $method->getName();
+            if (! str_starts_with($methodName, 'via')) {
+                continue;
+            }
+
+            // maker methods should have one parameter
+            $parameters = $method->getParameters();
+            if (count($parameters) !== 1) {
+                continue;
+            }
+
+            $type = $parameters[0]->getType();
+            if (! $type instanceof \ReflectionNamedType) {
+                continue;
+            }
+
+            $makerMethods[$type->getName()] = $methodName;
+        }
+
+        return $makerMethods;
     }
 }

@@ -54,7 +54,7 @@ it('can load the options from the database', function () {
         'payload' => 42,
     ]);
 
-    $options = (new TestOptions)->load();
+    $options = TestOptions::load();
 
     expect($options->get('strOption'))->toBe('foo');
     expect($options->get('intOption'))->toBe(42);
