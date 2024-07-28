@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TestOptionRelationsHolder extends Model
 {
+    use \blumewas\LaravelOptions\Concerns\HasRelatedOptions;
+
     /**
      * The table associated with the model.
      *
@@ -19,4 +21,14 @@ class TestOptionRelationsHolder extends Model
      * @var array
      */
     protected $guarded = [];
+
+    /**
+     * Get the options for the model.
+     *
+     * @return class-string<\blumewas\LaravelOptions\BaseOptions>
+     */
+    public function getOptionsClass(): string
+    {
+        return \Workbench\App\Options\TestOptions::class;
+    }
 }
