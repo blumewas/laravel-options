@@ -1,13 +1,18 @@
 <?php
 
-namespace VendorName\Skeleton\Tests;
+namespace blumewas\LaravelOptions\Tests;
 
+use blumewas\LaravelOptions\LaravelOptionsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\TestCase as Orchestra;
-use VendorName\Skeleton\SkeletonServiceProvider;
 
+#[WithMigration]
 class TestCase extends Orchestra
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -20,17 +25,22 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
-            SkeletonServiceProvider::class,
+            LaravelOptionsServiceProvider::class,
         ];
     }
 
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+    }
 
-        /*
-        $migration = include __DIR__.'/../database/migrations/create_skeleton_table.php.stub';
-        $migration->up();
-        */
+    protected function defineDatabaseMigrations()
+    {
+        $this->loadMigrationsFrom(
+            realpath(__DIR__.'/../database/migrations'),
+        );
+        $this->loadMigrationsFrom(
+            realpath(__DIR__.'/../workbench/database/migrations'),
+        );
     }
 }

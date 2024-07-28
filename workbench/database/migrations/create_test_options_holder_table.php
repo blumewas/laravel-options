@@ -8,10 +8,10 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('migration_table_name_table', function (Blueprint $table) {
+        Schema::create('test_options_holder', function (Blueprint $table) {
             $table->id();
 
-            // add fields
+            $table->json('options')->nullable();
 
             $table->timestamps();
         });
