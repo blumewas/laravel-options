@@ -1,6 +1,6 @@
 <?php
 
-namespace blumewas\LaravelOptions;
+namespace Blumewas\LaravelOptions;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;

@@ -44,7 +44,7 @@ php artisan vendor:publish --tag="laravel-options-views"
 ## Usage
 
 ```php
-$variable = new blumewas\LaravelOptions();
+$variable = new Blumewas\LaravelOptions();
 echo $variable->echoPhrase('Hello, VendorName!');
 ```
 

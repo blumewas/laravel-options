@@ -1,6 +1,6 @@
 <?php
 
-namespace blumewas\LaravelOptions\Models;
+namespace Blumewas\LaravelOptions\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Option extends Model
 {
+    public ?string $payloadCast = null;
+
     /**
      * The table associated with the model.
      *
@@ -28,4 +30,13 @@ class Option extends Model
         'name',
         'payload',
     ];
+
+    protected function casts()
+    {
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'payload' => $this->payloadCast ?? 'string',
+        ];
+    }
 }

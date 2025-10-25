@@ -2,16 +2,11 @@
 
 namespace Workbench\App\Options;
 
-use blumewas\LaravelOptions\BaseOptions;
+use Blumewas\LaravelOptions\Base\OptionGroup;
 
-class TestOptions extends BaseOptions
+class TestOptions extends OptionGroup
 {
-    public string $strOption;
+    public string $foo;
 
-    public ?int $intOption;
-
-    public static function group(): string
-    {
-        return 'test';
-    }
+    public int $intOption;
 }

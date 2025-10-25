@@ -1,78 +1,47 @@
 <?php
 
-namespace blumewas\LaravelOptions;
+namespace Blumewas\LaravelOptions;
 
-use blumewas\LaravelOptions\Casts\OptionsCast;
+use Blumewas\LaravelOptions\Base\Option;
+use Blumewas\LaravelOptions\Base\OptionGroup;
 
 class OptionsService
 {
-    protected array $castClasses = [
-        Casts\ViaArray::class,
-        Casts\ViaObject::class,
-        Casts\ViaJson::class,
-    ];
-
     /**
-     * The options casts.
+     * The option groups.
      *
-     * @var array<string, OptionsCast>
+     * @var array<string, OptionGroup>
      */
-    protected array $casts;
+    private $groups = [];
 
-    public function __construct()
+    public function __construct() {}
+
+    public function group(string $group): OptionGroup
     {
-        // Collect all the casts
-        $this->casts = collect($this->castClasses)
-            ->map(fn ($cast) => new $cast)
-            ->reduce(function ($carry, $cast) {
-                $handles = $cast->handles();
-                if (! is_array($handles)) {
-                    $handles = [$handles];
-                }
+        if (isset($this->groups[$group])) {
+            return $this->groups[$group];
+        }
 
-                foreach ($handles as $handle) {
-                    $carry[$handle] = $cast;
-                }
+        // Create a new OptionGroup if it doesn't exist
+        $this->groups[$group] = new OptionGroup($group);
 
-                return $carry;
-            }, []);
+        // Logic to retrieve or create an option group
+        return $this->groups[$group];
     }
 
     /**
-     * Make an instance of the options class from the given value.
-     *
-     * @param  mixed  $value
-     * @return null|\blumewas\LaravelOptions\BaseOptions
+     * Retrieve an option by group and name.
      */
-    public function makeVia($value, string $optionsClass)
+    public function get(string $group, string $name): Option
     {
-        $cast = $this->getCastFor($value);
+        // Load the option from the database or cache
+        $option = new Option(
+            $group,
+            $name
+        );
 
-        // If no cast is found, return null
-        if ($cast == null) {
-            return null;
-        }
+        $option->load();
 
-        return $cast->make($value, $optionsClass);
-    }
-
-    /**
-     * Get the cast for the given value.
-     *
-     * @param  mixed  $value
-     */
-    protected function getCastFor($value): ?OptionsCast
-    {
-        $valueType = gettype($value);
-        $valueClass = is_object($value) ? get_class($value) : $valueType;
-
-        // Get the cast by the valueClass then by the value type
-        $cast = $this->casts[$valueClass] ?? $this->casts[$valueType] ?? null;
-
-        if ($cast) {
-            return $cast;
-        }
-
-        return null;
+        return $option;
     }
 }

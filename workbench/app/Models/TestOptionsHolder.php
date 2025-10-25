@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TestOptionsHolder extends Model
 {
-    use \blumewas\LaravelOptions\Concerns\HasOptions;
+    // use \Blumewas\LaravelOptions\Concerns\HasOptions;
 
     /**
      * The table associated with the model.
@@ -21,9 +21,4 @@ class TestOptionsHolder extends Model
      * @var array
      */
     protected $guarded = [];
-
-    public function getOptionsClass(): string
-    {
-        return \Workbench\App\Options\TestOptions::class;
-    }
 }

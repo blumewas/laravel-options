@@ -1,8 +1,8 @@
 <?php
 
-namespace blumewas\LaravelOptions\Tests;
+namespace Blumewas\LaravelOptions\Tests;
 
-use blumewas\LaravelOptions\LaravelOptionsServiceProvider;
+use Blumewas\LaravelOptions\LaravelOptionsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\Attributes\WithMigration;
@@ -18,7 +18,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'VendorName\\Skeleton\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'Blumewas\\LaravelOptions\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
     }
 
